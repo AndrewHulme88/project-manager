@@ -1,11 +1,16 @@
-const projects = [];
+// index.js
+const { saveData, loadData } = require('./storage');
+const inquirer = require('inquirer');
+
+let projects = loadData();  // Load projects from the data file
 
 function addProject(name) {
     projects.push({
         name,
         tasks: []
     });
-    console.log(`Project '${name}' added`);
+    console.log(`Project '${name}' added.`);
+    saveData(projects);  // Save the updated projects array
 }
 
 function listProjects() {
@@ -16,8 +21,9 @@ function listProjects() {
 
 function removeProject(index) {
     if (index > 0 && index <= projects.length) {
-        console.log(`Project '${projects[index - 1].name}' removed`);
+        console.log(`Project '${projects[index - 1].name}' removed.`);
         projects.splice(index - 1, 1);
+        saveData(projects);  // Save the updated projects array
     } else {
         console.log("Invalid project number");
     }
@@ -29,7 +35,8 @@ function addTask(projectIndex, taskName) {
             name: taskName,
             completed: false
         });
-        console.log(`Task '${taskName}' added to project '${projects[projectIndex - 1].name}'`);
+        console.log(`Task '${taskName}' added to project '${projects[projectIndex - 1].name}'.`);
+        saveData(projects);  // Save the updated projects array
     } else {
         console.log("Invalid project number");
     }
@@ -47,25 +54,113 @@ function listTasks(projectIndex) {
     }
 }
 
-// CLI interaction
-const args = process.argv.slice(2);
-switch (args[0]) {
-    case 'addProject':
-        addProject(args[1]);
-        break;
-    case 'listProjects':
-        listProjects();
-        break;
-    case 'removeProject':
-        removeProject(parseInt(args[1]));
-        break;
-    case 'addTask':
-        addTask(parseInt(args[1]), args[2]);
-        break;
-    case 'listTasks':
-        listTasks(parseInt(args[1]));
-        break;
-    default:
-        console.log('Usage: node index.js [command] [args]');
-        console.log('Commands: addProject, listProjects, removeProject, addTask, listTasks');
+function toggleTask(projectIndex, taskIndex) {
+    if (projectIndex > 0 && projectIndex <= projects.length) {
+        const tasks = projects[projectIndex - 1].tasks;
+        if (taskIndex > 0 && taskIndex <= tasks.length) {
+            tasks[taskIndex - 1].completed = !tasks[taskIndex - 1].completed;
+            console.log(`Task '${tasks[taskIndex - 1].name}' marked as ${tasks[taskIndex - 1].completed ? 'completed' : 'incomplete'}`);
+            saveData(projects);  // Save the updated projects array
+        } else {
+            console.log("Invalid task number");
+        }
+    } else {
+        console.log("Invalid project number");
+    }
 }
+
+// Improved CLI interaction using inquirer
+function promptUser() {
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'action',
+                message: 'What would you like to do?',
+                choices: ['Add Project', 'List Projects', 'Remove Project', 'Add Task', 'List Tasks', 'Toggle Task Completion', 'Exit']
+            }
+        ])
+        .then(answers => {
+            switch(answers.action) {
+                case 'Add Project':
+                    inquirer.prompt({
+                        type: 'input',
+                        name: 'name',
+                        message: "Enter project name:",
+                    }).then(answers => {
+                        addProject(answers.name);
+                        promptUser();  // Loop back to prompt user again
+                    });
+                    break;
+                case 'List Projects':
+                    listProjects();
+                    promptUser();  // Loop back to prompt user again
+                    break;
+                case 'Remove Project':
+                    inquirer.prompt({
+                        type: 'input',
+                        name: 'index',
+                        message: "Enter project number to remove:",
+                        validate: input => !isNaN(input) && input > 0 && input <= projects.length
+                    }).then(answers => {
+                        removeProject(parseInt(answers.index));
+                        promptUser();  // Loop back to prompt user again
+                    });
+                    break;
+                case 'Add Task':
+                    inquirer.prompt([
+                        {
+                            type: 'input',
+                            name: 'projectIndex',
+                            message: "Enter project number to add task to:",
+                            validate: input => !isNaN(input) && input > 0 && input <= projects.length
+                        },
+                        {
+                            type: 'input',
+                            name: 'taskName',
+                            message: "Enter task name:"
+                        }
+                    ]).then(answers => {
+                        addTask(parseInt(answers.projectIndex), answers.taskName);
+                        promptUser();  // Loop back to prompt user again
+                    });
+                    break;
+                case 'List Tasks':
+                    inquirer.prompt({
+                        type: 'input',
+                        name: 'projectIndex',
+                        message: "Enter project number to list tasks for:",
+                        validate: input => !isNaN(input) && input > 0 && input <= projects.length
+                    }).then(answers => {
+                        listTasks(parseInt(answers.projectIndex));
+                        promptUser();  // Loop back to prompt user again
+                    });
+                    break;
+                case 'Toggle Task Completion':
+                    inquirer.prompt([
+                        {
+                            type: 'input',
+                            name: 'projectIndex',
+                            message: "Enter project number to toggle task:",
+                            validate: input => !isNaN(input) && input > 0 && input <= projects.length
+                        },
+                        {
+                            type: 'input',
+                            name: 'taskIndex',
+                            message: "Enter task number to toggle:",
+                            validate: input => !isNaN(input)
+                        }
+                    ]).then(answers => {
+                        toggleTask(parseInt(answers.projectIndex), parseInt(answers.taskIndex));
+                        promptUser();  // Loop back to prompt user again
+                    });
+                    break;
+                case 'Exit':
+                    console.log('Goodbye!');
+                    return;
+            }
+        });
+}
+
+// Start the application by prompting the user
+promptUser();
