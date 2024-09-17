@@ -13,7 +13,25 @@
         "grade": "B",
         "notes": "student needs practise",
         "completed": false
+      },
+      {
+        "name": "Test",
+        "completed": false,
+        "grade": "",
+        "notes": ""
+      },
+      {
+        "name": "Project",
+        "completed": false
       }
     ]
+  },
+  {
+    "name": "Sally",
+    "tasks": []
+  },
+  {
+    "name": "Jack",
+    "tasks": []
   }
 ]

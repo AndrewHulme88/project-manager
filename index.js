@@ -58,18 +58,21 @@ function listTasks(studentIndex) {
     }
 }
 
-// Toggles task completion, edits task details or deletes a task
+// Manages task completion, edits task details or deletes a task
 function manageTask(studentIndex, taskIndex, action, newDetails = {}) {
     if (studentIndex > 0 && studentIndex <= students.length) {
         let tasks = students[studentIndex - 1].tasks;
         if (taskIndex > 0 && taskIndex <= tasks.length) {
             if (action === 'toggle') {
                 tasks[taskIndex - 1].completed = !tasks[taskIndex - 1].completed;
+                console.log(`Task '${tasks[taskIndex - 1].name}' marked as ${tasks[taskIndex - 1].completed ? 'completed' : 'incomplete'}`);
             } else if (action === 'edit') {
                 tasks[taskIndex - 1] = { ...tasks[taskIndex - 1], ...newDetails };
+                console.log(`Task updated.`);
             } else if (action === 'delete') {
+                const taskName = tasks[taskIndex - 1].name;
                 tasks.splice(taskIndex - 1, 1);
-                console.log('Task deleted.');
+                console.log(`Task '${taskName}' deleted.`);
             }
             saveData(students);
         } else {
@@ -106,10 +109,18 @@ function promptUser() {
                         .then(removeStudentPrompt);
                     break;
                 case 'Manage Tasks':
+                    listStudents();
                     inquirer.prompt([
-                        {type: 'input', name: 'studentIndex', message: "Enter student number:", validate: validateIndex},
-                        {type: 'list', name: 'taskAction', message: "Choose action:", choices: ['Add Task', 'List Tasks', 'Edit Task', 'Toggle Task', 'Delete Task']}
-                    ]).then(manageTasksPrompt);
+                        {type: 'input', name: 'studentIndex', message: "Enter student number to manage tasks:", validate: validateIndex},
+                    ]).then(studentChoice => {
+                        const studentIndex = parseInt(studentChoice.studentIndex);
+                        inquirer.prompt({
+                            type: 'list',
+                            name: 'taskAction',
+                            message: "Choose action for student tasks:",
+                            choices: ['Add Task', 'List Tasks', 'Edit Task', 'Grade Task', 'Add Notes to Task', 'Toggle Task Completion', 'Delete Task']
+                        }).then(taskActionAnswer => manageStudentTasks(studentIndex, taskActionAnswer.taskAction));
+                    });
                     break;
                 case 'Exit':
                     console.log('Goodbye!');
@@ -129,25 +140,61 @@ function removeStudentPrompt(indexAnswer) {
     promptUser();
 }
 
-function manageTasksPrompt(answers) {
-    let studentIndex = parseInt(answers.studentIndex);
-    if (answers.taskAction === 'Add Task') {
-        inquirer.prompt([
-            {type: 'input', name: 'name', message: "Task name:"},
-            {type: 'input', name: 'grade', message: "Task grade (e.g., B+):"},
-            {type: 'input', name: 'notes', message: "Any notes:"}
-        ]).then(taskDetails => {
-            addTask(studentIndex, taskDetails);
-            promptUser();
-        });
-    } else if (['Edit Task', 'Toggle Task', 'Delete Task'].includes(answers.taskAction)) {
-        inquirer.prompt({type: 'input', name: 'taskIndex', message: "Enter task number:", validate: validateTaskIndex.bind(null, studentIndex)})
-            .then(taskIndexAnswer => {
-                manageTask(studentIndex, parseInt(taskIndexAnswer.taskIndex), answers.taskAction.toLowerCase());
+function manageStudentTasks(studentIndex, taskAction) {
+    if (studentIndex > 0 && studentIndex <= students.length) {
+        switch(taskAction) {
+            case 'Add Task':
+                inquirer.prompt({type: 'input', name: 'name', message: "Enter task name:"})
+                    .then(name => {
+                        addTask(studentIndex, {name: name.name});
+                        promptUser();
+                    });
+                break;
+            case 'List Tasks':
+                listTasks(studentIndex);
                 promptUser();
-            });
-    } else if (answers.taskAction === 'List Tasks') {
-        listTasks(studentIndex);
+                break;
+            case 'Edit Task':
+            case 'Grade Task':
+            case 'Add Notes to Task':
+            case 'Toggle Task Completion':
+            case 'Delete Task':
+                inquirer.prompt({type: 'input', name: 'taskIndex', message: "Enter task number:", validate: validateTaskIndex.bind(null, studentIndex)})
+                    .then(taskIndexAnswer => {
+                        const taskIndex = parseInt(taskIndexAnswer.taskIndex);
+                        let promptForDetails = () => {
+                            if (taskAction === 'Edit Task') {
+                                inquirer.prompt({type: 'input', name: 'newName', message: "New task name:"})
+                                    .then(name => {
+                                        manageTask(studentIndex, taskIndex, 'edit', {name: name.newName});
+                                        promptUser();
+                                    });
+                            } else if (taskAction === 'Grade Task') {
+                                inquirer.prompt({type: 'input', name: 'grade', message: "Enter grade for the task:"})
+                                    .then(grade => {
+                                        manageTask(studentIndex, taskIndex, 'edit', {grade: grade.grade});
+                                        promptUser();
+                                    });
+                            } else if (taskAction === 'Add Notes to Task') {
+                                inquirer.prompt({type: 'input', name: 'notes', message: "Enter notes for the task:"})
+                                    .then(notes => {
+                                        manageTask(studentIndex, taskIndex, 'edit', {notes: notes.notes});
+                                        promptUser();
+                                    });
+                            } else if (taskAction === 'Toggle Task Completion') {
+                                manageTask(studentIndex, taskIndex, 'toggle');
+                                promptUser();
+                            } else if (taskAction === 'Delete Task') {
+                                manageTask(studentIndex, taskIndex, 'delete');
+                                promptUser();
+                            }
+                        };
+                        promptForDetails();
+                    });
+                break;
+        }
+    } else {
+        console.log("Invalid student number");
         promptUser();
     }
 }
