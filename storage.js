@@ -9,9 +9,9 @@ function loadData(path='data.json') {
         return JSON.parse(fs.readFileSync(path, 'utf8'));
     } catch (error) {
         if (error.code === 'ENOENT') {
-            return []; // Return an empty array if the file does not exist
+            return [];
         } else {
-            throw error; // If it's any other error, throw it
+            throw error;
         }
     }
 }

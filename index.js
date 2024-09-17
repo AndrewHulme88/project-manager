@@ -1,8 +1,7 @@
-// index.js
 const { saveData, loadData } = require('./storage');
 const inquirer = require('inquirer');
 
-let projects = loadData();  // Load projects from the data file
+let projects = loadData();
 
 function addProject(name) {
     projects.push({
@@ -10,7 +9,7 @@ function addProject(name) {
         tasks: []
     });
     console.log(`Project '${name}' added.`);
-    saveData(projects);  // Save the updated projects array
+    saveData(projects);
 }
 
 function listProjects() {
@@ -23,7 +22,7 @@ function removeProject(index) {
     if (index > 0 && index <= projects.length) {
         console.log(`Project '${projects[index - 1].name}' removed.`);
         projects.splice(index - 1, 1);
-        saveData(projects);  // Save the updated projects array
+        saveData(projects);
     } else {
         console.log("Invalid project number");
     }
@@ -36,7 +35,7 @@ function addTask(projectIndex, taskName) {
             completed: false
         });
         console.log(`Task '${taskName}' added to project '${projects[projectIndex - 1].name}'.`);
-        saveData(projects);  // Save the updated projects array
+        saveData(projects);
     } else {
         console.log("Invalid project number");
     }
@@ -60,7 +59,7 @@ function toggleTask(projectIndex, taskIndex) {
         if (taskIndex > 0 && taskIndex <= tasks.length) {
             tasks[taskIndex - 1].completed = !tasks[taskIndex - 1].completed;
             console.log(`Task '${tasks[taskIndex - 1].name}' marked as ${tasks[taskIndex - 1].completed ? 'completed' : 'incomplete'}`);
-            saveData(projects);  // Save the updated projects array
+            saveData(projects);
         } else {
             console.log("Invalid task number");
         }
@@ -69,7 +68,6 @@ function toggleTask(projectIndex, taskIndex) {
     }
 }
 
-// Improved CLI interaction using inquirer
 function promptUser() {
     inquirer
         .prompt([
@@ -89,12 +87,12 @@ function promptUser() {
                         message: "Enter project name:",
                     }).then(answers => {
                         addProject(answers.name);
-                        promptUser();  // Loop back to prompt user again
+                        promptUser();
                     });
                     break;
                 case 'List Projects':
                     listProjects();
-                    promptUser();  // Loop back to prompt user again
+                    promptUser();
                     break;
                 case 'Remove Project':
                     inquirer.prompt({
@@ -104,7 +102,7 @@ function promptUser() {
                         validate: input => !isNaN(input) && input > 0 && input <= projects.length
                     }).then(answers => {
                         removeProject(parseInt(answers.index));
-                        promptUser();  // Loop back to prompt user again
+                        promptUser();
                     });
                     break;
                 case 'Add Task':
@@ -122,7 +120,7 @@ function promptUser() {
                         }
                     ]).then(answers => {
                         addTask(parseInt(answers.projectIndex), answers.taskName);
-                        promptUser();  // Loop back to prompt user again
+                        promptUser();
                     });
                     break;
                 case 'List Tasks':
@@ -133,7 +131,7 @@ function promptUser() {
                         validate: input => !isNaN(input) && input > 0 && input <= projects.length
                     }).then(answers => {
                         listTasks(parseInt(answers.projectIndex));
-                        promptUser();  // Loop back to prompt user again
+                        promptUser();
                     });
                     break;
                 case 'Toggle Task Completion':
@@ -152,7 +150,7 @@ function promptUser() {
                         }
                     ]).then(answers => {
                         toggleTask(parseInt(answers.projectIndex), parseInt(answers.taskIndex));
-                        promptUser();  // Loop back to prompt user again
+                        promptUser();
                     });
                     break;
                 case 'Exit':
@@ -162,5 +160,4 @@ function promptUser() {
         });
 }
 
-// Start the application by prompting the user
 promptUser();
