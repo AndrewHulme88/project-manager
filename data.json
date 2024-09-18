@@ -4,25 +4,26 @@
     "tasks": [
       {
         "name": "",
-        "grade": "1",
+        "grade": "A",
         "notes": "",
         "completed": false
       },
       {
-        "name": "Homework",
+        "name": "homework",
         "grade": "B",
-        "notes": "student needs practise",
+        "notes": "hello",
         "completed": false
       },
       {
         "name": "Test",
         "completed": false,
-        "grade": "",
-        "notes": ""
+        "grade": "C+",
+        "notes": "Student needs practise"
       },
       {
         "name": "Project",
-        "completed": false
+        "completed": false,
+        "grade": "B"
       }
     ]
   },
@@ -32,6 +33,10 @@
   },
   {
     "name": "Jack",
+    "tasks": []
+  },
+  {
+    "name": "Bob",
     "tasks": []
   }
 ]
